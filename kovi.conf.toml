@@ -1,0 +1,12 @@
+[server]
+host = "127.0.0.1"
+port = 8081
+access_token = ""
+secure = false
+path = "/"
+all_in_one = false
+
+[config]
+main_admin = "L1rics"
+admins = []
+debug = false
