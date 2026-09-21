@@ -3,19 +3,6 @@
 version = 4
 
 [[package]]
-name = "addissue"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "kovi",
- "kovi-onebot",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -112,8 +99,8 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 name = "arc-bot"
 version = "0.1.0"
 dependencies = [
- "addissue",
  "echo",
+ "issues",
  "kovi",
  "kovi-onebot",
  "kovi-plugin-cmd",
@@ -547,6 +534,19 @@ name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
+
+[[package]]
+name = "issues"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "kovi",
+ "kovi-onebot",
+ "serde",
+ "serde_json",
+ "uuid",
+]
 
 [[package]]
 name = "itoa"

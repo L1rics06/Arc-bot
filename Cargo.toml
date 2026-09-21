@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-addissue = { version = "0.1.0", path = "plugins/addissue" }
+issues = { version = "0.1.0", path = "plugins/issues" }
 echo = { version = "0.1.0", path = "plugins/echo" }
 
 kovi.workspace = true
@@ -12,7 +12,7 @@ kovi-onebot.workspace = true
 kovi-plugin-cmd = { version = "0.4.0", features = ["onebot"] }
 
 [workspace]
-members = ["plugins/addissue","plugins/echo"]
+members = ["plugins/issues","plugins/echo"]
 
 [workspace.dependencies]
 kovi = "0.13.5"
