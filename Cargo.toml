@@ -10,9 +10,10 @@ echo = { version = "0.1.0", path = "plugins/echo" }
 kovi.workspace = true
 kovi-onebot.workspace = true
 kovi-plugin-cmd = { version = "0.4.0", features = ["onebot"] }
+message_route = { version = "0.1.0", path = "plugins/message_route" }
 
 [workspace]
-members = ["plugins/issues","plugins/echo"]
+members = ["plugins/issues","plugins/echo", "plugins/message_route"]
 
 [workspace.dependencies]
 kovi = "0.13.5"

@@ -1,13 +1,11 @@
-use std::{env, path::Path, sync::Arc};
+use std::{env, path::Path};
 
 use chrono::DateTime;
 use kovi::{
-    PluginBuilder as plugin,
     chrono::{self, Utc},
     tokio::fs,
     utils::{load_json_data, save_json_data},
 };
-use kovi_onebot::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -22,7 +20,12 @@ pub struct Issue {
     time: DateTime<Utc>,
 }
 
-/// Todo: 实际上我想实现的是在解析函数调用之前就能被分类，所以可能要补充一个消息类型分类插件
+///
+pub async fn issues_help() -> String {
+    "Issues用法：1./add 增加issue \n2./list 展示当前所有issues".to_string()
+}
+
+/// 解析/add 命令传入的text，返回结构体
 async fn parse_text(text: &str) -> anyhow::Result<Issue> {
     let mut text = text.to_string();
     text = text.replace("/add", "");
@@ -59,47 +62,39 @@ async fn read_issues(path: String) -> anyhow::Result<Vec<Issue>, Box<dyn std::er
     Ok(outputs)
 }
 
-/// 发送所有的issues
-async fn list_issues(issues: Vec<Issue>, event: &Arc<MsgEvent>) {
+/// 读取所有的issues，并准备格式化文本
+async fn format_issues(issues: Vec<Issue>) -> String {
     let mut text = String::new();
     let mut count = 0;
 
     for issue in issues {
         count += 1;
-        text += &format!("{}. {}\n", count, issue.description);
+        text += &format!(
+            "{}. {} 创建时间：{}\n",
+            count, issue.description, issue.time
+        );
     }
 
-    event.reply(text);
+    text
 }
 
-/// 运行时
-async fn run(event: Arc<MsgEvent>) -> anyhow::Result<()> {
-    let raw_text = event.borrow_text();
-    match raw_text {
-        Some(text) => {
-            if text.contains("/add") {
-                let issue = parse_text(text).await?;
-                let path = Path::new(STORAGE_DIR).join(format!("{}.json", issue.name));
-                let _ = save_json_data(&issue, path);
+/// /list 命令的框架，收到来自message的text，返回需要发送的格式化文本
+pub async fn list_issues() -> anyhow::Result<String> {
+    let entrys = read_issues(STORAGE_DIR.to_string())
+        .await
+        .map_err(|e| anyhow::anyhow!("读取发生错误{}", e))?;
 
-                event.reply(format!("增加事件成功"));
-                Ok(())
-            } else if text.contains("/list") {
-                let entrys = read_issues(STORAGE_DIR.to_string())
-                    .await
-                    .map_err(|e| anyhow::anyhow!("读取发生错误{}", e))?;
+    Ok(format_issues(entrys).await)
+}
 
-                list_issues(entrys, &event).await;
-                Ok(())
-            } else {
-                Ok(())
-            }
-        }
-        None => Err(anyhow::anyhow!("Fail to borrow text")),
-    }
+/// /add 命令的框架，收到来自message的text，返回可能的错误
+pub async fn add_issues(raw_text: &str) -> anyhow::Result<()> {
+    let issue = parse_text(raw_text).await?;
+    let path = Path::new(STORAGE_DIR).join(format!("{}.json", issue.name));
+    let _ = save_json_data(&issue, path);
+
+    Ok(())
 }
 
 #[kovi::plugin]
-async fn main() {
-    plugin::on(run);
-}
+async fn main() {}
