@@ -11,9 +11,13 @@ kovi.workspace = true
 kovi-onebot.workspace = true
 kovi-plugin-cmd = { version = "0.4.0", features = ["onebot"] }
 message_route = { version = "0.1.0", path = "plugins/message_route" }
+similar_beatmap = { version = "0.1.0", path = "plugins/similar_beatmap" }
+serde_beatmap = { version = "0.1.0", path = "plugins/serde_beatmap" }
+rosu-v2 = "0.11.0"
+dotenvy = "0.15.7"
 
 [workspace]
-members = ["plugins/issues","plugins/echo", "plugins/message_route"]
+members = ["plugins/issues","plugins/echo", "plugins/message_route", "plugins/similar_beatmap", "plugins/serde_beatmap"]
 
 [workspace.dependencies]
 kovi = "0.13.5"

@@ -1,0 +1,10 @@
+[package]
+name = "serde_beatmap"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+kovi.workspace = true
+kovi-onebot.workspace = true
+rosu-v2 = "0.11.0"
