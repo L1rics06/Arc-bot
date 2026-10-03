@@ -12,6 +12,7 @@ async fn help_text() -> String {
     help_text
 }
 
+/// todo!: 实现消息类型的枚举
 ///从协议端收到消息之后给消息路由到对应的插件
 async fn route(event: Arc<MsgEvent>) {
     let message = event.borrow_text().unwrap();

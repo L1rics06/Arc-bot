@@ -1506,6 +1506,8 @@ dependencies = [
  "kovi",
  "kovi-onebot",
  "rosu-v2",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
