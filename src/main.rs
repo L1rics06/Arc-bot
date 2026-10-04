@@ -6,6 +6,7 @@ pub struct BotStatus {
     pub rosu: Osu,
 }
 
+// todo：增加一个数据共享类的插件 解决bot状态插件间读取的问题
 impl BotStatus {
     async fn new() -> Self {
         //rosu-v2 init

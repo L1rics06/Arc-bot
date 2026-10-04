@@ -996,6 +996,8 @@ dependencies = [
  "issues",
  "kovi",
  "kovi-onebot",
+ "rosu-v2",
+ "serde_beatmap",
 ]
 
 [[package]]
@@ -1503,6 +1505,7 @@ name = "serde_beatmap"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dotenvy",
  "kovi",
  "kovi-onebot",
  "rosu-v2",

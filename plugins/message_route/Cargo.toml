@@ -7,3 +7,5 @@ edition = "2024"
 kovi.workspace = true
 kovi-onebot.workspace = true
 issues = {path = "../issues"}
+serde_beatmap = {path = "../serde_beatmap"}
+rosu-v2 = "0.11.0"

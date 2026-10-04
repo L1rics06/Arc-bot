@@ -1,3 +1,4 @@
 /target
 /issues
 /.env
+/plugins/message_route/.env
