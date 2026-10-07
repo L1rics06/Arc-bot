@@ -16,7 +16,7 @@ async fn help_text() -> String {
 
 /// todo!: 实现消息类型的枚举
 ///从协议端收到消息之后给消息路由到对应的插件
-async fn route(event: Arc<MsgEvent>, rosu: Arc<Osu>) {
+async fn route(event: Arc<MsgEvent>, rosu: Option<Arc<Osu>>) {
     let message = event.borrow_text().unwrap();
 
     if message.contains("/add") {
@@ -32,9 +32,13 @@ async fn route(event: Arc<MsgEvent>, rosu: Arc<Osu>) {
     } else if message.contains("/help") {
         event.reply(help_text().await);
     } else if message.contains("/map") {
-        match map_info(message, &rosu).await {
-            Ok(reply) => event.reply(reply),
-            Err(e) => event.reply(format!("查询铺面时发生错误:{}", e)),
+        match &rosu {
+            Some(rosu) => match map_info(message, rosu).await {
+                Ok(reply) => event.reply(reply),
+                Err(e) => event.reply(format!("查询铺面时发生错误:{}", e)),
+            },
+            None => event
+                .reply("osu! API 未配置或认证失败，/map 暂不可用（检查 .env 的 CLIENT_ID / CLIENT_SECRET）"),
         }
     } else {
         event.reply("未知命令，输入/help查看用法");
@@ -45,12 +49,16 @@ async fn route(event: Arc<MsgEvent>, rosu: Arc<Osu>) {
 // 所以这里临时重复初始化了一次rosu-v2
 #[kovi::plugin]
 async fn main() {
-    let client_id: u64 = std::env::var("CLIENT_ID").unwrap().parse().unwrap();
-    let client_secret = std::env::var("CLIENT_SECRET").unwrap();
-    let osu = Arc::new(Osu::new(client_id, client_secret).await.unwrap());
+    let osu = match serde_beatmap::osu_from_env().await {
+        Ok(osu) => Some(Arc::new(osu)),
+        Err(e) => {
+            eprintln!("rosu 初始化失败，/map 命令将不可用：{e:#}");
+            None
+        }
+    };
 
     plugin::on(move |event| {
-        let osu = Arc::clone(&osu);
+        let osu = osu.clone();
 
         async move {
             route(event, osu).await;

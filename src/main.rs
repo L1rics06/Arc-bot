@@ -3,16 +3,21 @@ use rosu_v2::Osu;
 
 pub struct BotStatus {
     pub bot: Bot,
-    pub rosu: Osu,
+    /// 凭据没配好时为 None，用到的插件需要自己判断
+    pub rosu: Option<Osu>,
 }
 
 // todo：增加一个数据共享类的插件 解决bot状态插件间读取的问题
 impl BotStatus {
     async fn new() -> Self {
-        //rosu-v2 init
-        let client_id: u64 = std::env::var("CLIENT_ID").unwrap().parse().unwrap();
-        let client_secret = std::env::var("CLIENT_SECRET").unwrap();
-        let osu = Osu::new(client_id, client_secret).await.unwrap();
+        //rosu-v2 init，失败只降级不中断启动
+        let rosu = match serde_beatmap::osu_from_env().await {
+            Ok(osu) => Some(osu),
+            Err(e) => {
+                eprintln!("rosu 初始化失败，依赖 osu! API 的命令将不可用：{e:#}");
+                None
+            }
+        };
 
         //bot init
         let driver_config = kovi_onebot::load_local_conf().unwrap();
@@ -22,7 +27,7 @@ impl BotStatus {
 
         BotStatus {
             bot: bot,
-            rosu: osu,
+            rosu: rosu,
         }
     }
 }

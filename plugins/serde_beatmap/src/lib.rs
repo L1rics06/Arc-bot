@@ -1,6 +1,24 @@
 use anyhow::Context;
 use rosu_v2::Osu;
 
+/// 从环境变量读凭据并初始化 osu! API 客户端。
+///
+/// 凭据缺失、格式不对或认证失败都返回 Err 而不是 panic，
+/// 由调用方决定怎么降级，这样凭据没配好时机器人本体还能起来。
+pub async fn osu_from_env() -> anyhow::Result<Osu> {
+    let client_id: u64 = std::env::var("CLIENT_ID")
+        .context("未设置环境变量 CLIENT_ID")?
+        .trim()
+        .parse()
+        .context("CLIENT_ID 不是合法的数字")?;
+
+    let client_secret = std::env::var("CLIENT_SECRET").context("未设置环境变量 CLIENT_SECRET")?;
+
+    Osu::new(client_id, client_secret)
+        .await
+        .context("osu! API 认证失败，请检查 CLIENT_ID / CLIENT_SECRET")
+}
+
 ///检查 beatmapID 的合法性
 async fn validate_bid(id: &str) -> anyhow::Result<u32> {
     let n: u32 = id
