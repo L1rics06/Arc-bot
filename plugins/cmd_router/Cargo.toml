@@ -1,0 +1,17 @@
+[package]
+name = "cmd_router"
+version = "0.1.0"
+edition = "2024"
+description = "arc-bot 命令路由插件：命令注册表、统一分发、/help 聚合、权限校验"
+
+[dependencies]
+arc-core = { path = "../../crates/arc-core" }
+beatmap_api = { path = "../../crates/beatmap_api" }
+issues = { path = "../../crates/issues" }
+kovi.workspace = true
+kovi-onebot.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

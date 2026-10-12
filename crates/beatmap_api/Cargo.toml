@@ -1,0 +1,22 @@
+[package]
+name = "beatmap_api"
+version = "0.1.0"
+edition = "2024"
+description = "osu! 铺面数据模块：API 客户端、领域模型、本地缓存、.osu 文件下载与解析"
+
+[dependencies]
+arc-core = { path = "../arc-core" }
+chrono.workspace = true
+kovi.workspace = true
+kovi-onebot.workspace = true
+log.workspace = true
+reqwest.workspace = true
+rosu-v2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

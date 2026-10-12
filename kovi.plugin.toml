@@ -7,29 +7,12 @@ list_mode = "WhiteList"
 friends = []
 groups = []
 
-[issues]
+# 命令路由插件：所有业务命令（issues / beatmap_api）都从它分发
+[cmd_router]
 enable_on_startup = true
 access_control = false
 list_mode = "WhiteList"
 
-[issues.access_list]
-friends = []
-groups = []
-
-[echo]
-enable_on_startup = true
-access_control = false
-list_mode = "WhiteList"
-
-[echo.access_list]
-friends = []
-groups = []
-
-[message_route]
-enable_on_startup = true
-access_control = false
-list_mode = "WhiteList"
-
-[message_route.access_list]
+[cmd_router.access_list]
 friends = []
 groups = []

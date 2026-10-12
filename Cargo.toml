@@ -1,24 +1,64 @@
+# arc-bot —— 二进制入口（只做装配，不含业务逻辑）
+#
+# 结构约定见 AGENTS.md：
+#   crates/    库 crate（可复用、不含 kovi 插件入口）
+#   plugins/   kovi 插件 crate（唯一的 cmd_router）
+
 [package]
 name = "arc-bot"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-issues = { version = "0.1.0", path = "plugins/issues" }
-echo = { version = "0.1.0", path = "plugins/echo" }
+arc-core = { path = "crates/arc-core" }
+cmd_router = { path = "plugins/cmd_router" }
+beatmap_api = { path = "crates/beatmap_api" }
+issues = { path = "crates/issues" }
 
 kovi.workspace = true
 kovi-onebot.workspace = true
-kovi-plugin-cmd = { version = "0.4.0", features = ["onebot"] }
-message_route = { version = "0.1.0", path = "plugins/message_route" }
-similar_beatmap = { version = "0.1.0", path = "plugins/similar_beatmap" }
-serde_beatmap = { version = "0.1.0", path = "plugins/serde_beatmap" }
-rosu-v2 = "0.11.0"
-dotenvy = "0.15.7"
+kovi-plugin-cmd = { workspace = true, features = ["onebot"] }
+dotenvy.workspace = true
+log.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
 [workspace]
-members = ["plugins/issues","plugins/echo", "plugins/message_route", "plugins/similar_beatmap", "plugins/serde_beatmap"]
+members = [
+    "crates/arc-core",
+    "crates/beatmap_api",
+    "crates/issues",
+    "plugins/cmd_router",
+]
 
 [workspace.dependencies]
+# 框架
 kovi = "0.13.5"
 kovi-onebot = "0.13.2"
+kovi-plugin-cmd = "0.4.0"
+
+# 异步运行时
+tokio = { version = "1.53", features = ["sync", "fs", "macros", "rt"] }
+
+# 序列化
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# 错误处理
+anyhow = "1"
+thiserror = "2"
+
+# 工具
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+uuid = { version = "1", features = ["v4"] }
+dotenvy = "0.15.7"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+
+# osu!
+rosu-v2 = "0.11.0"
+
+# 测试
+tempfile = "3"
+
+[profile.release]
+lto = "thin"

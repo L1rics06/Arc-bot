@@ -1,4 +1,8 @@
 /target
-/issues
+# 运行期数据（kovi 规范目录：issue、谱面缓存等）
+/data
+# 旧版本 issue 数据（首次 /add 时自动迁移进 data/issues）
+/legacy-data
 /.env
-/plugins/message_route/.env
+# ZCode 会话状态（计划稿等），不属于项目内容
+/.zcode
