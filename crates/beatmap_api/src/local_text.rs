@@ -83,6 +83,14 @@ pub mod osu_file {
     /// 拿到的内容不是 `.osu` 谱面文件。
     pub const NOT_OSU_FILE: &str =
         "拿到的内容不是有效的 .osu 谱面文件（谱面可能已被删除，或需要登录 osu!）";
+    /// osu! 对不存在的谱面返回空内容。
+    pub fn not_an_osu_body(map_id: u32, bytes: usize) -> String {
+        if bytes == 0 {
+            format!("osu! 没有返回谱面 {map_id} 的 .osu 内容（编号不存在或谱面已被删除）")
+        } else {
+            format!("osu! 返回的 {map_id} 内容不是 .osu 谱面文件（{bytes} 字节，可能是错误页）")
+        }
+    }
 }
 
 /// 缓存相关。

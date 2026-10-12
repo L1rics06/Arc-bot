@@ -94,3 +94,27 @@ fn recognizes_osu_file_magic() {
     assert!(!looks_like_osu_file(b"<!DOCTYPE html>\n<html>"));
     assert!(!looks_like_osu_file(b""));
 }
+
+#[tokio::test]
+async fn invalid_cache_must_be_refetched() {
+    use beatmap_api::osu_file::cached_file_is_usable;
+
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("123.osu");
+
+    assert!(!cached_file_is_usable(&path).await, "文件不存在 → 不可用");
+
+    // osu! 对不存在/已删除的谱面会返回 200 + 空 body：这种缓存必须失效
+    tokio::fs::write(&path, b"").await.unwrap();
+    assert!(!cached_file_is_usable(&path).await, "空文件 → 不可用");
+
+    tokio::fs::write(&path, b"<!DOCTYPE html><html>nope</html>")
+        .await
+        .unwrap();
+    assert!(!cached_file_is_usable(&path).await, "错误页 → 不可用");
+
+    tokio::fs::write(&path, b"osu file format v14\n[General]\n")
+        .await
+        .unwrap();
+    assert!(cached_file_is_usable(&path).await, "有效 .osu → 可用");
+}

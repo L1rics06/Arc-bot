@@ -6,5 +6,5 @@
 mod download;
 mod parse;
 
-pub use download::{OSU_FILE_URL, download_osu_file, fetch_difficulty};
+pub use download::{OSU_FILE_URL, cached_file_is_usable, download_osu_file, fetch_difficulty};
 pub use parse::{looks_like_osu_file, parse_difficulty, parse_mode};
