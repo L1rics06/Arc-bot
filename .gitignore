@@ -6,3 +6,6 @@
 /.env
 # ZCode 会话状态（计划稿等），不属于项目内容
 /.zcode
+/.zcodeignore
+# AI agent 的工程约定（保留在本地，不进仓库）
+/AGENTS.md
