@@ -27,6 +27,7 @@ members = [
     "crates/arc-core",
     "crates/beatmap_api",
     "crates/issues",
+    "crates/osu-difficulty-runtime",
     "plugins/cmd_router",
 ]
 
