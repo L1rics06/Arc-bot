@@ -200,8 +200,15 @@ where
         })?
 }
 
-/// 数据集里的在线链接（空字符串视为缺失）。
-pub(super) fn online_url(raw: &str) -> Option<String> {
+/// 数据集里可用的在线链接。
+///
+/// 数据集包含少量没有在线 ID 的本地谱面：它们的 ID 是离线生成的（超出 u32 范围，
+/// SQLite 里甚至以负数保存），随包的 `online_url` 指向的是一个不存在的编号。
+/// 这类记录照常作为候选，但不生成跳转链接（与 OPP 一致）。
+pub(super) fn online_url(beatmap_id: u64, raw: &str) -> Option<String> {
+    if beatmap_id == 0 || beatmap_id > u64::from(u32::MAX) {
+        return None;
+    }
     let raw = raw.trim();
     if raw.is_empty() {
         None

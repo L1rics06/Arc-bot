@@ -69,7 +69,7 @@ fn target_info(target: &QueryTarget) -> TargetInfo {
         artist: target.metadata.artist.clone(),
         title: target.metadata.title.clone(),
         version: target.metadata.version.clone(),
-        url: online_url(&target.metadata.online_url),
+        url: online_url(target.metadata.beatmap_id, &target.metadata.online_url),
         star_rating: target.metadata.star_rating,
         mania: None,
     }
@@ -83,7 +83,7 @@ fn row(result: QueryResult) -> CandidateRow {
         artist: result.metadata.artist,
         title: result.metadata.title,
         version: result.metadata.version,
-        url: online_url(&result.metadata.online_url),
+        url: online_url(result.metadata.beatmap_id, &result.metadata.online_url),
         star_rating: result.metadata.star_rating,
         distance: result.final_distance,
         mania: None,

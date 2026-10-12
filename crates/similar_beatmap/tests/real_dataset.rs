@@ -33,7 +33,10 @@ fn dataset_dir(env: &str, name: &str) -> PathBuf {
     }
 }
 
-/// 从 SQLite 里取一个谱面 ID（用于冒烟查询）。
+/// 从 SQLite 里取一个可用于冒烟的谱面 ID。
+///
+/// 数据集里混有离线生成的合成 ID（超出 u32 范围，SQLite 里可能以负数保存），
+/// 命令层的 ID 是 u32，因此这里只取在线范围内、且带在线链接的一张。
 fn first_beatmap_id(path: &PathBuf, table: &str, column: &str) -> Option<u64> {
     let connection = Connection::open_with_flags(
         path,
@@ -42,7 +45,10 @@ fn first_beatmap_id(path: &PathBuf, table: &str, column: &str) -> Option<u64> {
     .ok()?;
     connection
         .query_row(
-            &format!("SELECT {column} FROM {table} LIMIT 1"),
+            &format!(
+                "SELECT {column} FROM {table} \
+                 WHERE {column} > 0 AND {column} <= 4294967295 AND online_url != '' LIMIT 1"
+            ),
             [],
             |row| row.get::<_, i64>(0),
         )
@@ -118,4 +124,91 @@ fn mania_dataset_smoke() {
             "mania 候选必须与目标同键数"
         );
     }
+}
+
+/// 命令级冒烟：真实数据目录下跑 `/similar`，验证从分发到渲染的完整回复。
+mod command {
+    use std::sync::Arc;
+
+    use arc_core::{AppMeta, AppState, Args, ListMode, RegistryBuilder, SharedState};
+    use beatmap_api::OsuService;
+
+    use super::{first_beatmap_id, mania_dir, standard_dir};
+
+    /// 仓库里的数据根目录（`data/`，模块目录是其下的 `similar_beatmap/`）。
+    fn data_root() -> std::path::PathBuf {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../data")
+    }
+
+    /// 直接调用命令处理器，返回回复或错误文案。
+    async fn run(text: &str) -> Result<String, String> {
+        let state: SharedState<OsuService> = Arc::new(AppState::new(AppMeta {
+            name: "similar-beatmap-smoke".to_owned(),
+            admins: Vec::new(),
+            data_root: data_root(),
+        }));
+        let mut builder = RegistryBuilder::new();
+        similar_beatmap::register(&mut builder, state.clone());
+        let command = builder
+            .into_commands()
+            .into_iter()
+            .find(|command| command.name == "similar")
+            .expect("similar command registered");
+        let args = Args::parse_with_command(text, ListMode::Include, state.clone());
+        match (command.handler)(state, args).await {
+            Ok(reply) => Ok(reply.to_string()),
+            Err(error) => Err(error.to_string()),
+        }
+    }
+
+    #[tokio::test]
+    async fn standard_command_smoke() {
+        let dir = standard_dir();
+        let metadata = dir.join("metadata.sqlite");
+        let Some(map_id) = first_beatmap_id(&metadata, "beatmaps", "beatmap_id") else {
+            eprintln!("跳过：未找到 standard 数据集（{}）", dir.display());
+            return;
+        };
+
+        let reply = run(&format!("{map_id} -n 3"))
+            .await
+            .expect("standard reply");
+        println!("=== /similar {map_id} -n 3 ===\n{reply}\n");
+        assert!(reply.contains("相似谱面 · 目标："), "{reply}");
+        assert!(reply.contains("距离"), "{reply}");
+        assert!(reply.contains("https://osu.ppy.sh/b/"), "{reply}");
+        assert!(reply.contains("数据截至"), "{reply}");
+        assert!(
+            !super::has_synthetic_link(&reply),
+            "合成 ID 不应生成在线链接：{reply}"
+        );
+    }
+
+    #[tokio::test]
+    async fn mania_command_smoke() {
+        let dir = mania_dir();
+        let metadata = dir.join("mania-metadata.sqlite");
+        let Some(map_id) = first_beatmap_id(&metadata, "mania_beatmaps", "beatmap_id") else {
+            eprintln!("跳过：未找到 mania 数据集（{}）", dir.display());
+            return;
+        };
+
+        let reply = run(&format!("{map_id} --mods NM,DT -n 3"))
+            .await
+            .expect("mania reply");
+        println!("=== /similar {map_id} --mods NM,DT -n 3 ===\n{reply}\n");
+        assert!(reply.contains("相似谱面 · 目标："), "{reply}");
+        assert!(reply.contains('K'), "mania 应显示键数：{reply}");
+        assert!(reply.contains("距离"), "{reply}");
+    }
+}
+
+/// 回复里是否出现了超出 u32 范围的假链接（合成 ID）。
+fn has_synthetic_link(reply: &str) -> bool {
+    reply.split("osu.ppy.sh/b/").skip(1).any(|rest| {
+        let digits: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+        digits
+            .parse::<u64>()
+            .is_ok_and(|id| id > u64::from(u32::MAX))
+    })
 }

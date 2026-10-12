@@ -71,7 +71,7 @@ fn target_info(target: &ManiaQueryTarget) -> TargetInfo {
         artist: target.metadata.artist.clone(),
         title: target.metadata.title.clone(),
         version: target.metadata.version.clone(),
-        url: online_url(&target.metadata.online_url),
+        url: online_url(target.metadata.beatmap_id, &target.metadata.online_url),
         star_rating: None,
         mania: Some(ManiaRowInfo {
             key_count: target.metadata.key_count,
@@ -100,7 +100,7 @@ fn row(result: ManiaQueryResult) -> CandidateRow {
         artist: result.metadata.artist,
         title: result.metadata.title,
         version: result.metadata.version,
-        url: online_url(&result.metadata.online_url),
+        url: online_url(result.metadata.beatmap_id, &result.metadata.online_url),
         star_rating: None,
         distance: result.final_distance,
         mania: Some(info),
