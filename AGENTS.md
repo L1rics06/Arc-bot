@@ -20,9 +20,12 @@ crates/                     # 库 crate：可复用、不含 kovi 插件入口
   arc-core/                 #   核心库（不依赖 kovi / OneBot）
   beatmap_api/              #   osu! 数据模块
   issues/                   #   待办清单模块
+  similar_beatmap/          #   相似谱面模块（/similar）
+  osu-difficulty-runtime/   #   vendored 上游快照：相似谱面算法与数据集格式（不要手改）
 plugins/                    # kovi 插件 crate：会被 build_bot! 挂载
   cmd_router/               #   唯一的消息监听与命令分发
 data/                       # 运行期数据（gitignore）
+  similar_beatmap/          #   相似谱面数据集（自行下载，gitignore）
 legacy-data/                # v0.1 的 issue 数据，首次 /add 时自动迁移（gitignore）
 docs/ideas/                 # 未实现的设计稿
 ```
@@ -33,15 +36,28 @@ docs/ideas/                 # 未实现的设计稿
 ## 依赖方向（严格单向，不允许成环）
 
 ```
-main → cmd_router → {issues, beatmap_api} → arc-core
+main → cmd_router → {issues, beatmap_api, similar_beatmap} → arc-core
+                        similar_beatmap → osu-difficulty-runtime
 ```
 
-- 业务模块（issues / beatmap_api）**只依赖 arc-core**，不依赖 cmd_router。
+- 业务模块（issues / beatmap_api / similar_beatmap）**只依赖 arc-core**
+  （similar_beatmap 另外依赖 beatmap_api 与 vendored 的 osu-difficulty-runtime），
+  不依赖 cmd_router。
   命令的"描述"类型（`CommandSpec` / `RegistryBuilder`）住在 `arc_core::command`，
   就是为了让这一点成立。
 - arc-core 是纯库：不引入 kovi、OneBot 或任何协议端类型。
   它只认识 `AppState<C>`（`C` 是共享的外部客户端类型，如 `OsuService`）。
 - 需要"读命令表"的框架级命令（如 `/help`）通过 `arc_core::CommandSource` trait 访问。
+
+## vendored 上游 crate
+
+`crates/osu-difficulty-runtime` 是 OPP 的上游快照，**保持与上游一致**（含其
+`README.md`），只允许追加 `VENDORED.md`：
+
+- 同步方式、上游 commit、许可与依赖锁定见该目录的 `VENDORED.md`。
+- **不要**为"顺手修一下"改它的源码；需要改动时同步回上游或在 VENDORED.md 里记录。
+- 数据集的算法版本与它强绑定（Analyzer v4 / mania v1）：升级它就必须换数据集。
+- `rosu-pp` fork 与 `mania-pattern` 两个 git 依赖锁在 `Cargo.lock`，不要 `cargo update`。
 
 ## 模块骨架标准（每个 crate 都要遵守）
 
@@ -155,10 +171,17 @@ cp .env.example .env    # 填 CLIENT_ID / CLIENT_SECRET（只影响 /map）
 cargo run               # 首次运行 kovi 会引导生成 kovi.conf.toml
 ```
 
-`.env` 缺失或凭据错误**不会**中断启动：机器人照常上线，`/map` 返回可操作的提示。
+`.env` 缺失或凭据错误**不会**中断启动：机器人照常上线，`/map` 返回可操作的提示；
+`/similar` 仍可用（数据集查询不依赖 API），只是无法现场分析未收录的谱面。
+
+相似谱面数据集放到 `data/similar_beatmap/{standard,mania}`（或由
+`SIMILAR_STANDARD_DATASET` / `SIMILAR_MANIA_DATASET` 指定），来源与版本要求见
+`docs/similar-beatmap.md`。
 
 ## 已知待办
 
-- `similar_beatmap`：相似谱面推荐，见 `docs/ideas/similar-beatmap.md`
-  （前置件 `.osu` 下载与 `[Difficulty]` 解析已就绪，见 `beatmap_api::osu_file`）。
 - 命令级限流（防刷屏）尚未实现。
+- 相似谱面的"按玩家最近成绩推荐"未实现：需要 osu! 用户级 OAuth
+  （授权码流程 + token 持久化），目前只有 client credentials。
+- 相似谱面数据集需要手动下载（`osu-difficulty-lab` 的 Release），
+  见 `docs/similar-beatmap.md`；数据集与 runtime 版本必须成套升级。
