@@ -1,6 +1,6 @@
-//! `beatmap_api::osu_file` 的测试：[Difficulty] 段的解析规则。
+//! `beatmap_api::osu_file` 的测试：[Difficulty] / [General] 段解析与文件识别。
 
-use beatmap_api::osu_file::parse_difficulty;
+use beatmap_api::osu_file::{looks_like_osu_file, parse_difficulty, parse_mode};
 
 const SAMPLE: &str = "\
 osu file format v14
@@ -55,4 +55,42 @@ fn bad_value_is_reported() {
     let err = parse_difficulty("[Difficulty]\nCircleSize:abc\n").unwrap_err();
     let msg = err.to_string();
     assert!(msg.contains("CircleSize"), "错误应指出字段名：{msg}");
+}
+
+#[test]
+fn parses_mode_from_general_section() {
+    let text = "[General]\nAudioFilename: audio.mp3\nMode: 3\n\n[Difficulty]\nMode: 0\n";
+    assert_eq!(parse_mode(text).unwrap(), 3, "Mode 应只从 General 段读取");
+    assert_eq!(parse_mode("[General]\nMode:0\n").unwrap(), 0);
+}
+
+#[test]
+fn mode_defaults_to_standard_when_absent() {
+    assert_eq!(parse_mode("[General]\nAudioFilename: a.mp3\n").unwrap(), 0);
+    assert_eq!(parse_mode("").unwrap(), 0);
+}
+
+#[test]
+fn mode_key_is_case_insensitive_and_ignores_comments() {
+    let text = "[general]\n// Mode: 3\nmode: 2 // taiko\n";
+    assert_eq!(parse_mode(text).unwrap(), 2);
+}
+
+#[test]
+fn bad_mode_value_is_reported() {
+    let err = parse_mode("[General]\nMode: mania\n").unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("Mode"), "错误应指出字段名：{msg}");
+    assert!(msg.contains("mania"), "错误应带上原值：{msg}");
+}
+
+#[test]
+fn recognizes_osu_file_magic() {
+    assert!(looks_like_osu_file(b"osu file format v14\n[General]\n"));
+    assert!(
+        looks_like_osu_file(b"\xEF\xBB\xBFosu file format v14\n"),
+        "带 UTF-8 BOM 的文件头也应识别"
+    );
+    assert!(!looks_like_osu_file(b"<!DOCTYPE html>\n<html>"));
+    assert!(!looks_like_osu_file(b""));
 }

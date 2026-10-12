@@ -1,4 +1,4 @@
-//! 端到端路由测试：用真实装配（issues + beatmap_api + /help）验证命令分发。
+//! 端到端路由测试：用真实装配（issues + beatmap_api + similar_beatmap + /help）验证命令分发。
 //!
 //! 不连 QQ、不打网络：只测路由层与命令处理器之间的接线。
 
@@ -18,6 +18,7 @@ fn build_runner(data_root: &std::path::Path) -> Runner<OsuService> {
     let mut builder = RegistryBuilder::new();
     issues::register(&mut builder, state.clone());
     beatmap_api::register(&mut builder);
+    similar_beatmap::register(&mut builder, state.clone());
 
     let mut registry = Registry::from_builder(builder);
     state.set_commands(Arc::new(registry.clone()));
@@ -85,13 +86,36 @@ async fn help_lists_all_registered_commands() {
     let dir = tempfile::tempdir().unwrap();
     let runner = build_runner(dir.path());
     let help = reply(&runner, "/help").await.expect("help 应有回复");
-    for cmd in ["/map", "/add", "/list", "/show", "/edit", "/del", "/status"] {
+    for cmd in [
+        "/map", "/similar", "/add", "/list", "/show", "/edit", "/del", "/status",
+    ] {
         assert!(help.contains(cmd), "/help 应包含 {cmd}：{help}");
     }
 
     // 单命令帮助
     let one = reply(&runner, "/help map").await.unwrap();
     assert!(one.contains("用法：/map <beatmapID>"), "{one}");
+
+    // 相似谱面的详细说明包含权重与 mania 选项
+    let similar = reply(&runner, "/help similar").await.unwrap();
+    assert!(similar.contains("--weights"), "{similar}");
+    assert!(similar.contains("--mods"), "{similar}");
+}
+
+#[tokio::test]
+async fn similar_without_dataset_is_actionable() {
+    let dir = tempfile::tempdir().unwrap();
+    let runner = build_runner(dir.path());
+    // 没部署数据集时也要给出"放哪 / 怎么配"的提示，而不是静默或 panic
+    let msg = reply(&runner, "/similar 12345")
+        .await
+        .expect("应回复错误提示");
+    assert!(msg.contains("没有部署相似谱面数据集"), "{msg}");
+    assert!(msg.contains("SIMILAR_STANDARD_DATASET"), "{msg}");
+
+    // 别名走同一条命令
+    let alias = reply(&runner, "/相似 12345").await.expect("别名应有回复");
+    assert!(alias.contains("没有部署相似谱面数据集"), "{alias}");
 }
 
 #[tokio::test]

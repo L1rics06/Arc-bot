@@ -1,0 +1,26 @@
+[package]
+name = "similar_beatmap"
+version = "0.1.0"
+edition = "2024"
+description = "arc-bot 相似谱面模块：基于 osu-difficulty-runtime 数据集的 /similar 命令"
+
+[dependencies]
+arc-core = { path = "../arc-core" }
+beatmap_api = { path = "../beatmap_api" }
+osu-difficulty-runtime = { path = "../osu-difficulty-runtime" }
+chrono.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+serde.workspace = true
+# 合成数据集 fixture 需要写出与 runtime 一致的文件格式（版本必须与其 Cargo.toml 对齐）
+bincode = "1.3"
+hex = "0.4"
+hnsw = { version = "0.11", features = ["serde1"] }
+rand_pcg = { version = "0.3", features = ["serde1"] }
+rusqlite = { version = "=0.39.0", features = ["bundled", "fallible_uint"] }
+sha2 = "0.10"
+space = { version = "0.17", features = ["alloc", "serde"] }

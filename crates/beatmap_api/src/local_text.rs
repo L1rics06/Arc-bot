@@ -14,9 +14,9 @@ pub mod hint {
     pub fn need_id() -> String {
         format!("缺少 beatmapID，用法：{}", super::usage::MAP)
     }
-    /// beatmapID 不是数字。
+    /// beatmapID 既不是数字，也不是可识别的 osu! 链接。
     pub fn bad_id(raw: &str) -> String {
-        format!("beatmapID `{raw}` 不是合法的数字")
+        format!("无法从 `{raw}` 解析 beatmapID（支持编号或 osu.ppy.sh 谱面链接）")
     }
     /// beatmapID 为 0。
     pub const ZERO_ID: &str = "beatmapID 需为非零正整数";
@@ -76,10 +76,13 @@ pub mod osu_file {
     pub fn read_failed(path: &str, detail: &str) -> String {
         format!("读取 {path} 失败：{detail}")
     }
-    /// Difficulty 段字段非法。
-    pub fn bad_field(key: &str, value: &str) -> String {
-        format!("Difficulty 段字段 `{key}` 的值 `{value}` 无法解析")
+    /// 某段的 `Key:Value` 值非法。
+    pub fn bad_field(section: &str, key: &str, value: &str) -> String {
+        format!("{section} 段字段 `{key}` 的值 `{value}` 无法解析")
     }
+    /// 拿到的内容不是 `.osu` 谱面文件。
+    pub const NOT_OSU_FILE: &str =
+        "拿到的内容不是有效的 .osu 谱面文件（谱面可能已被删除，或需要登录 osu!）";
 }
 
 /// 缓存相关。

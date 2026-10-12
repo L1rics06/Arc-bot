@@ -17,7 +17,7 @@
 //!
 //! ## 依赖方向
 //!
-//! `main → cmd_router → {issues, beatmap_api} → arc-core`
+//! `main → cmd_router → {issues, beatmap_api, similar_beatmap} → arc-core`
 //!
 //! 不要在本 crate 里写业务逻辑：新功能加到对应业务模块，
 //! 然后在 [`main`] 的装配处加一行 `register`。
@@ -59,6 +59,7 @@ async fn main() {
     let mut builder = RegistryBuilder::new();
     issues::register(&mut builder, state.clone());
     beatmap_api::register(&mut builder);
+    similar_beatmap::register(&mut builder, state.clone());
 
     // 3. 共享 osu! 服务：整个进程只认证 / 初始化一次
     let cache_dir = state.module_dir("beatmap_api").join("cache");

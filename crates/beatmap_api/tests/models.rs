@@ -17,6 +17,51 @@ fn parse_id_rejects_invalid() {
 }
 
 #[test]
+fn parse_id_accepts_osu_links() {
+    assert_eq!(
+        parse_beatmap_id("https://osu.ppy.sh/b/12345").unwrap(),
+        12345
+    );
+    assert_eq!(
+        parse_beatmap_id("https://osu.ppy.sh/beatmaps/12345").unwrap(),
+        12345
+    );
+    assert_eq!(
+        parse_beatmap_id("https://osu.ppy.sh/beatmapsets/6789#osu/12345").unwrap(),
+        12345
+    );
+    assert_eq!(
+        parse_beatmap_id("https://osu.ppy.sh/beatmapsets/6789#mania/54321").unwrap(),
+        54321
+    );
+    assert_eq!(
+        parse_beatmap_id("http://www.osu.ppy.sh/b/7").unwrap(),
+        7,
+        "www 主机与 http 协议也应接受"
+    );
+    assert_eq!(
+        parse_beatmap_id("osu.ppy.sh/b/12345").unwrap(),
+        12345,
+        "省略协议头也应接受"
+    );
+    assert_eq!(
+        parse_beatmap_id("https://osu.ppy.sh/b/12345?m=0").unwrap(),
+        12345,
+        "查询参数应被忽略"
+    );
+}
+
+#[test]
+fn parse_id_rejects_links_without_beatmap_id() {
+    assert!(
+        parse_beatmap_id("https://osu.ppy.sh/beatmapsets/6789").is_err(),
+        "只有谱面集 ID 时应报错"
+    );
+    assert!(parse_beatmap_id("https://example.com/b/12345").is_err());
+    assert!(parse_beatmap_id("https://osu.ppy.sh/").is_err());
+}
+
+#[test]
 fn stats_distance_is_l1_over_four_dims() {
     let a = DifficultyStats {
         cs: 4.0,

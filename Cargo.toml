@@ -14,6 +14,7 @@ arc-core = { path = "crates/arc-core" }
 cmd_router = { path = "plugins/cmd_router" }
 beatmap_api = { path = "crates/beatmap_api" }
 issues = { path = "crates/issues" }
+similar_beatmap = { path = "crates/similar_beatmap" }
 
 kovi.workspace = true
 kovi-onebot.workspace = true
@@ -28,6 +29,7 @@ members = [
     "crates/beatmap_api",
     "crates/issues",
     "crates/osu-difficulty-runtime",
+    "crates/similar_beatmap",
     "plugins/cmd_router",
 ]
 

@@ -8,6 +8,7 @@ description = "arc-bot 命令路由插件：命令注册表、统一分发、/he
 arc-core = { path = "../../crates/arc-core" }
 beatmap_api = { path = "../../crates/beatmap_api" }
 issues = { path = "../../crates/issues" }
+similar_beatmap = { path = "../../crates/similar_beatmap" }
 kovi.workspace = true
 kovi-onebot.workspace = true
 log.workspace = true
